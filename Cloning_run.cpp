@@ -102,13 +102,16 @@ int main( int argc,char *argv[]){
     ofstream fileout;
     fileout.open(outputfile);
     for (int loopi=0;loopi<N_snapshots;loopi++){
-        fileout<<N_max+2<<"\n";
+        fileout<<N_max+4<<"\n";
         fileout<<"Next\n";
         for (int i=0;i<N_max;i++){
         fileout<<"H"<<"\t"<<mylattice[loopi].pos[1][i][0]<<"\t"<<mylattice[loopi].pos[1][i][1]<<"\t"<<0.1<<"\n";
         }
         fileout<<"O"<<"\t"<<mylattice[loopi].pos[0][0][0]<<"\t"<<mylattice[loopi].pos[0][0][1]<<"\t"<<0.1<<"\n";
         fileout<<"O"<<"\t"<<mylattice[loopi].pos[0][1][0]<<"\t"<<mylattice[loopi].pos[0][1][1]<<"\t"<<0.1<<"\n";
+        fileout<<"O"<<"\t"<<mylattice[loopi].pos[0][2][0]<<"\t"<<mylattice[loopi].pos[0][2][1]<<"\t"<<0.1<<"\n";
+        fileout<<"O"<<"\t"<<mylattice[loopi].pos[0][3][0]<<"\t"<<mylattice[loopi].pos[0][3][1]<<"\t"<<0.1<<"\n";
+        
     }
    
 	
