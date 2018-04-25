@@ -1,0 +1,14 @@
+# VMD for MACOSXX86, version 1.9.1 (February 4, 2012)
+# Log file '/Users/rusi/Google Drive/TPS/load.vmd', created by user rusi
+menu graphics off
+menu graphics on
+mol modstyle 0 0 VDW 1.000000 12.000000
+mol modstyle 0 0 VDW 0.900000 12.000000
+mol modstyle 0 0 VDW 0.800000 12.000000
+mol modstyle 0 0 VDW 0.700000 12.000000
+mol modstyle 0 0 VDW 0.600000 12.000000
+mol modstyle 0 0 VDW 0.500000 12.000000
+mol modstyle 0 0 VDW 0.400000 12.000000
+display projection Orthographic
+# VMD for MACOSXX86, version 1.9.1 (February 4, 2012)
+# end of log file.
