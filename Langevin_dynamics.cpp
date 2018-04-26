@@ -127,8 +127,8 @@ int Langevin_dynamics::propogate_dynamics(double dt){
             noise_1 = fd_term * gsl_ran_gaussian(r,1);
             del1=dt * fpos[loopi][loopj][0] + noise_0;
             del2=dt * fpos[loopi][loopj][1] + noise_1;
-            if (fabs(del1)>0.5*Lx|| pos[loopi][loopj][0]>Lx || pos[loopi][loopj][0]<0){
-                cout<<del1<<"Kill program\n";
+            if (fabs(del1)>0.5*Lx|| fabs(del2)>0.5*Lx){
+                cout<<del1<<"\t"<<del2<<"Kill program\n";
                 assert(0);//To check for wildly inappropriate moves.
             }
             pos[loopi][loopj][0] += del1;
