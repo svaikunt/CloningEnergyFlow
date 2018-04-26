@@ -67,9 +67,9 @@ void Langevin_dynamics::equilibrate(){
     gamma_i=1;
     //Compute forces, evolve dynamics, return y factor
     double time=0;
-    double dt=0.0001;
+    double dt=0.001;
     int count;
-    for (time=0;time<dt*800000;time=time+dt){
+    for (time=0;time<dt*80000;time=time+dt){
         compute_forces();
         count+=1;
         for (int loopi=0;loopi<N_type;loopi++){
@@ -79,19 +79,19 @@ void Langevin_dynamics::equilibrate(){
                 noise_1 = fd_term * gsl_ran_gaussian(r,1);
                 del1=dt * fpos[loopi][loopj][0] + noise_0;
                 del2=dt * fpos[loopi][loopj][1] + noise_1;
-                if (fabs(del1)>0.25| fabs(del2)>0.25|| pos[loopi][loopj][0]>Lx || pos[loopi][loopj][0]<0||pos[loopi][loopj][1]>Ly||pos[loopi][loopj][1]<0){
+                if (fabs(del1)>1| fabs(del2)>1|| pos[loopi][loopj][0]>Lx || pos[loopi][loopj][0]<0||pos[loopi][loopj][1]>Ly||pos[loopi][loopj][1]<0){
                     cout<<del1<<"\t"<<noise_0<<"\t"<<dt * fpos[loopi][loopj][0]<<"Kill program\n";
                     cout<<del2<<"\t"<<noise_1<<"\t"<<dt * fpos[loopi][loopj][1]<<"Kill program\n";
                     cout<<"Time"<<"\t"<<time<<"\n";
                     //Check for big overlaps during equilibration and handle them.
-                    if (del1>0.25)
-                        del1=0.25;
-                    if (del1<-0.25)
-                        del1=-0.25;
-                    if (del2>0.25)
-                        del2=0.25;
-                    if (del2<-0.25)
-                        del2=-0.25;
+                    if (del1>1)
+                        del1=1;
+                    if (del1<-1)
+                        del1=-1;
+                    if (del2>1)
+                        del2=1;
+                    if (del2<-1)
+                        del2=-1;
 
                     pos[loopi][loopj][0] += del1;
                     pos[loopi][loopj][1] += del2;
@@ -127,9 +127,17 @@ double Langevin_dynamics::propogate_dynamics(double dt){
             noise_1 = fd_term * gsl_ran_gaussian(r,1);
             del1=dt * fpos[loopi][loopj][0] + noise_0;
             del2=dt * fpos[loopi][loopj][1] + noise_1;
-            if (fabs(del1)>0.5*Lx|| fabs(del2)>0.5*Lx){
+            if (fabs(del1)>0.1*Lx|| fabs(del2)>0.1*Lx){
                 cout<<del1<<"\t"<<del2<<"Kill program\n";
-                assert(0);//To check for wildly inappropriate moves.
+                //assert(0);//To check for wildly inappropriate moves.
+                if (del1>1)
+                    del1=1;
+                if (del1<-1)
+                    del1=-1;
+                if (del2>1)
+                    del2=1;
+                if (del2<-1)
+                    del2=-1;
             }
             pos[loopi][loopj][0] += del1;
             pos[loopi][loopj][1] += del2;
@@ -227,6 +235,7 @@ double Langevin_dynamics::computey(){
     double xy[2];
     xy[0]=0;
     xy[1]=0;
+    compute_forces();
     for (int loopi=0;loopi<N_type;loopi++){
         for(int loopj=0;loopj<Ntype[loopi];loopj++){
             xy[loopi]+=fpos[loopi][loopj][0]*(-fpostype[loopi][loopj][0])+fpos[loopi][loopj][1]*(-fpostype[loopi][loopj][1]);

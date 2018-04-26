@@ -38,7 +38,7 @@ int main( int argc,char *argv[]){
 	long int randomseed=atoi(argv[3]);
 	double dt=atof(argv[4]);
 	double S=atof(argv[5]);
-	int N_snapshots=50;
+	int N_snapshots=1000;
     
     //Initiating gsl
     gsl_rng *r=gsl_rng_alloc(gsl_rng_taus2);
@@ -87,6 +87,7 @@ int main( int argc,char *argv[]){
         for (int loopj=0;loopj<N_snapshots;loopj++){
             //j=pick randomly from the clones
             y[loopj]=mylattice[loopj].propogate_dynamics(dt);//propogate clone.
+            //cout<<"Testing yc\t"<<y[loopj]<<"\n";
             tpos[loopj]=mylattice[loopj].pos;//storing clone positions for switching.
             sumy+=y[loopj];
         }
@@ -100,8 +101,14 @@ int main( int argc,char *argv[]){
             int iterate=-1;
             do{
                 iterate+=1;
-            }while(yc[iterate]<=randtemp);
+            }while(yc2[iterate]<=randtemp);
+            if (iterate>N_snapshots-1){
+                cout<<"Iterate\t"<<iterate<<"\t"<<randtemp<<"\t"<<yc[N_snapshots-1]<<"\n";
+                iterate=N_snapshots-1;
+            }
             mylattice[loopj].pos=tpos[iterate];
+            //if(teetotaler>0.99*t_analysis)
+            //    cout<<"Clone\t"<<loopj<<"\t is now clone \t"<<iterate<<"\n";
         }
         double ratio=((double)(sumy)*pow(N_snapshots,-1.0));
         growthcgf=growthcgf*ratio;
