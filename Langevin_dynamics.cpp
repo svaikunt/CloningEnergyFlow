@@ -114,7 +114,7 @@ void Langevin_dynamics::equilibrate(){
 
 }
 
-int Langevin_dynamics::propogate_dynamics(double dt){
+double Langevin_dynamics::propogate_dynamics(double dt){
     double fd_term,noise_0,noise_1;
     double del1,del2;
     gamma_i=1;
@@ -147,16 +147,19 @@ int Langevin_dynamics::propogate_dynamics(double dt){
     double y2=exp(-dt*S*y1);
     //cout<<y<<"\n";
     int yc;
-    if (fabs(y1*S*dt)>5){
+    if (fabs(y1*S*dt)>3){
         cout<<"Panic in system"<<"\t"<<y1<<"\n";
         cout.flush();
-        return 0.0;
+        if (y1*S*dt<0)
+            return 20.0;
+        if (y1*S*dt>0)
+            return 0;
         //Absurd value of y are not returned.
     }
     else{
         yc=(int)(floor(y2+gsl_rng_uniform(r)));
         cout.flush();
-        return yc;//yc is used to compute cloning probabilities. 
+        return y2;//yc is used to compute cloning probabilities.
     }
 }
 

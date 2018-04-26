@@ -48,37 +48,64 @@ int main( int argc,char *argv[]){
     
 	//Iniatiate N_snapshots or clones of mylattice.
 	Langevin_dynamics mylattice[N_snapshots];
-	vector < vector < vector<double> > > tpos;
+    double y[N_snapshots];
+    double yc[N_snapshots];
+    double yc2[N_snapshots];
+    double sumy=0;
+	vector< vector < vector < vector<double> > > > tpos;
+    
+    for (int i=0;i<N_snapshots;i++){
+        vector< vector< vector<double> > > pos;
+        for (int loopi=0;loopi<N_type;loopi++){
+            vector< vector<double> > pos2;
+            vector< vector<double> >fpos2;
+            for (int loopj=0;loopj<Ntype[loopi];loopj++){
+                vector<double> pos1;
+                vector<double> fpos1;
+                for(int loopk=0;loopk<2;loopk++){
+                    pos1.push_back(gsl_rng_uniform(r)*Lx);
+                    fpos1.push_back(0);
+                }
+                pos2.push_back(pos1);
+                fpos2.push_back(fpos1);
+            }
+            pos.push_back(pos2);
+        }
+        tpos.push_back(pos);
+    }
     
     for (int i=0;i<N_snapshots;i++){
         cout<<"Clone>>>>>>>>>>>>>>>\t"<<i<<"\n";
 		mylattice[i].initialize(N_max,randomseed+i,S);
+        tpos[i]=mylattice[i].pos;
     }
     
 	for (double teetotaler=0;teetotaler<t_analysis;teetotaler+=dt){
+        sumy=0;
+        double sumyc=0;
         for (int loopj=0;loopj<N_snapshots;loopj++){
-            int j=gsl_rng_uniform_int(r,N_snapshots);
             //j=pick randomly from the clones
-            int y=mylattice[j].propogate_dynamics(dt);//propogate clone.
-                if (y==0){
-                    do{
-                        loopi=gsl_rng_uniform_int(r,N_snapshots);
-                    }
-                    while(loopi==j);
-                    mylattice[j].pos=mylattice[loopi].pos;
-                }
-                else{
-                    tpos=mylattice[j].pos;
-                        for(loopi=0;loopi<y-1;loopi++){
-                            loopj=gsl_rng_uniform_int(r,N_snapshots+y-1);
-                            if (loopj<N_snapshots)
-                                mylattice[loopj].pos=tpos;
-                        }
-                }
-            double ratio=((double)(N_snapshots+y-1))*pow(N_snapshots,-1.0);
-            growthcgf=growthcgf*ratio;
-            //compute y for clone. Kill (copy some other clone into this) or select clones randomly to copy into
-            //keep track of growth function.
+            y[loopj]=mylattice[loopj].propogate_dynamics(dt);//propogate clone.
+            tpos[i]=mylattice[i].pos;//storing clone positions for switching.
+            sumy+=y[loopj];
+        }
+        for (int loopj=0;loopj<N_snapshots;loopj++){
+            yc[loopj]=(int)(floor(y[loopj]/sumy*N_snapshots+gsl_rng_uniform(r)));
+            sumyc+=yc[loopj];
+            yc2[loopj]=sumyc;
+        }
+        for (int loopj=0;loopj<N_snapshots;loopj++){
+            double randtemp=gsl_rng_uniform(r)*sumyc;
+            int iterate=0;
+            do{
+                iterate+=1;
+            }while(yc[iterate]<=randtemp);
+            mylattice[loopj].pos=tpos[iterate];
+        }
+        double ratio=((double)(sumy)*pow(N_snapshots,-1.0);
+        growthcgf=growthcgf*ratio;
+        //compute y for clone. Kill (copy some other clone into this) or select clones randomly to copy into
+        //keep track of growth function.
         }
     }
     cout<<"CGF:"<<log(growthcgf)/t_analysis<<"\n";
