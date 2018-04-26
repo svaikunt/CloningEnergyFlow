@@ -54,20 +54,21 @@ int main( int argc,char *argv[]){
     double sumy=0;
 	vector< vector < vector < vector<double> > > > tpos;
     
+    
+    int N_type=2;// number of particle types
+    int Ntype[2];
+    Ntype[0]=4; //There are two particle of type 0
+    Ntype[1]=N_max;//Number of particles of type 1 input by user.
     for (int i=0;i<N_snapshots;i++){
         vector< vector< vector<double> > > pos;
         for (int loopi=0;loopi<N_type;loopi++){
             vector< vector<double> > pos2;
-            vector< vector<double> >fpos2;
             for (int loopj=0;loopj<Ntype[loopi];loopj++){
                 vector<double> pos1;
-                vector<double> fpos1;
                 for(int loopk=0;loopk<2;loopk++){
-                    pos1.push_back(gsl_rng_uniform(r)*Lx);
-                    fpos1.push_back(0);
+                    pos1.push_back(0);
                 }
                 pos2.push_back(pos1);
-                fpos2.push_back(fpos1);
             }
             pos.push_back(pos2);
         }
@@ -86,7 +87,7 @@ int main( int argc,char *argv[]){
         for (int loopj=0;loopj<N_snapshots;loopj++){
             //j=pick randomly from the clones
             y[loopj]=mylattice[loopj].propogate_dynamics(dt);//propogate clone.
-            tpos[i]=mylattice[i].pos;//storing clone positions for switching.
+            tpos[loopj]=mylattice[loopj].pos;//storing clone positions for switching.
             sumy+=y[loopj];
         }
         for (int loopj=0;loopj<N_snapshots;loopj++){
@@ -96,17 +97,16 @@ int main( int argc,char *argv[]){
         }
         for (int loopj=0;loopj<N_snapshots;loopj++){
             double randtemp=gsl_rng_uniform(r)*sumyc;
-            int iterate=0;
+            int iterate=-1;
             do{
                 iterate+=1;
             }while(yc[iterate]<=randtemp);
             mylattice[loopj].pos=tpos[iterate];
         }
-        double ratio=((double)(sumy)*pow(N_snapshots,-1.0);
+        double ratio=((double)(sumy)*pow(N_snapshots,-1.0));
         growthcgf=growthcgf*ratio;
         //compute y for clone. Kill (copy some other clone into this) or select clones randomly to copy into
         //keep track of growth function.
-        }
     }
     cout<<"CGF:"<<log(growthcgf)/t_analysis<<"\n";
     

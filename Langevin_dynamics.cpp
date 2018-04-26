@@ -157,10 +157,9 @@ double Langevin_dynamics::propogate_dynamics(double dt){
         //Absurd value of y are not returned.
     }
     else{
-        yc=(int)(floor(y2+gsl_rng_uniform(r)));
-        cout.flush();
         return y2;//yc is used to compute cloning probabilities.
     }
+    return y2;
 }
 
 void Langevin_dynamics::compute_forces(){
