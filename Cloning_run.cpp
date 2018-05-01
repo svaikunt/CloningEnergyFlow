@@ -38,7 +38,7 @@ int main( int argc,char *argv[]){
 	long int randomseed=atoi(argv[3]);
 	double dt=atof(argv[4]);
 	double S=atof(argv[5]);
-	int N_snapshots=1000;
+	int N_snapshots=100;
     
     //Initiating gsl
     gsl_rng *r=gsl_rng_alloc(gsl_rng_taus2);
@@ -75,9 +75,18 @@ int main( int argc,char *argv[]){
         tpos.push_back(pos);
     }
     
+    Langevin_dynamics masterlattice;
+    masterlattice.initialize(N_max,randomseed,S);
+    cout<<"Clone>>>>>>>>>>>>>>>Equilibrating master\n";
+    masterlattice.equilibrate();
+    
     for (int i=0;i<N_snapshots;i++){
         cout<<"Clone>>>>>>>>>>>>>>>\t"<<i<<"\n";
-		mylattice[i].initialize(N_max,randomseed+i,S);
+        //for (int j=0;j<20.0/dt;j++)
+        //   double dump=masterlattice.propogate_dynamics(dt);
+        mylattice[i].initialize(N_max,randomseed+i,S);
+        mylattice[i].equilibrate();
+		//mylattice[i].pos=masterlattice.pos;
         tpos[i]=mylattice[i].pos;
     }
     
@@ -87,28 +96,42 @@ int main( int argc,char *argv[]){
         for (int loopj=0;loopj<N_snapshots;loopj++){
             //j=pick randomly from the clones
             y[loopj]=mylattice[loopj].propogate_dynamics(dt);//propogate clone.
-            //cout<<"Testing yc\t"<<y[loopj]<<"\n";
+            
             tpos[loopj]=mylattice[loopj].pos;//storing clone positions for switching.
             sumy+=y[loopj];
         }
         for (int loopj=0;loopj<N_snapshots;loopj++){
             yc[loopj]=(int)(floor(y[loopj]/sumy*N_snapshots+gsl_rng_uniform(r)));
+            //cout<<"Testing yc\t"<<yc[loopj]<<"\n";
             sumyc+=yc[loopj];
             yc2[loopj]=sumyc;
         }
-        for (int loopj=0;loopj<N_snapshots;loopj++){
-            double randtemp=gsl_rng_uniform(r)*sumyc;
-            int iterate=-1;
-            do{
-                iterate+=1;
-            }while(yc2[iterate]<=randtemp);
-            if (iterate>N_snapshots-1){
-                cout<<"Iterate\t"<<iterate<<"\t"<<randtemp<<"\t"<<yc[N_snapshots-1]<<"\n";
-                iterate=N_snapshots-1;
+        if(sumyc==N_snapshots){
+            int clonecount=0;
+            for (int loopj=0;loopj<N_snapshots;loopj++){
+                for (int loopk=0;loopk<yc[loopj];loopk++){
+                    mylattice[loopk+clonecount].pos=tpos[loopj];
+                }
+                clonecount+=yc[loopj];
+                //cout<<loopj<<"\t"<<clonecount<<"\n";
+                //cout.flush();
             }
-            mylattice[loopj].pos=tpos[iterate];
-            //if(teetotaler>0.99*t_analysis)
-            //    cout<<"Clone\t"<<loopj<<"\t is now clone \t"<<iterate<<"\n";
+        }
+        if (sumyc!=N_snapshots){
+            for (int loopj=0;loopj<N_snapshots;loopj++){
+                double randtemp=gsl_rng_uniform(r)*sumyc;
+                int iterate=-1;
+                do{
+                    iterate+=1;
+                }while(yc2[iterate]<=randtemp);
+                if (iterate>N_snapshots-1){
+                    cout<<"Iterate\t"<<iterate<<"\t"<<randtemp<<"\t"<<yc[N_snapshots-1]<<"\n";
+                    iterate=N_snapshots-1;
+                }
+                mylattice[loopj].pos=tpos[iterate];
+                if(teetotaler>0.0*t_analysis)
+                    cout<<"Clone\t"<<loopj<<"\t is now clone \t"<<iterate<<"\t"<<yc2[iterate]<<"\t"<<randtemp<<"\n";
+            }
         }
         double ratio=((double)(sumy)*pow(N_snapshots,-1.0));
         growthcgf=growthcgf*ratio;
@@ -120,7 +143,7 @@ int main( int argc,char *argv[]){
     //Compute averages over the cloned lattices.
     double avgy=0; //Average value of dU12/dt will be stored in avgy.
     char outputfile[100];
-    sprintf(outputfile,"ystatsNmax%d.S%.2f.XYZ",N_max,S);
+    sprintf(outputfile,"ystatsNmax%d.S%.3f.XYZ",N_max,S);
     ofstream fileoutystats;
     fileoutystats.open(outputfile);
     fileoutystats<<"CGF\t"<<log(growthcgf)/t_analysis<<"\n";
@@ -132,7 +155,7 @@ int main( int argc,char *argv[]){
         avgy+=tempy;
     }
 	cout<<"avgenergy:"<<avgy*pow(N_snapshots,-1.0)<<"\n";
-    sprintf(outputfile,"SnapshotsN%d.S%.2f.XYZ",N_max,S);
+    sprintf(outputfile,"SnapshotsN%d.S%.3f.XYZ",N_max,S);
     ofstream fileout;
     fileout.open(outputfile);
     for (int loopi=0;loopi<N_snapshots;loopi++){

@@ -57,7 +57,7 @@ void Langevin_dynamics::initialize(int N_max1,long int randomseed1,double S1){
         upostype.push_back(fpos2);
         zerovec.push_back(fpos2);
     }
-    equilibrate();//initial equilibration run.
+    //equilibrate();//initial equilibration run.
     //pos[type][Number][dimension];
 }
 
@@ -67,11 +67,29 @@ void Langevin_dynamics::equilibrate(){
     gamma_i=1;
     //Compute forces, evolve dynamics, return y factor
     double time=0;
-    double dt=0.001;
-    int count;
-    for (time=0;time<dt*80000;time=time+dt){
+    double dt=0.0001;
+    int count=0;
+    char outputfile[100];
+    sprintf(outputfile,"EquilibriumN%d.S%.3f.XYZ",N_max,S);
+    ofstream fileout;
+    fileout.open(outputfile);
+    for (time=0;time<dt*100000;time=time+dt){
         compute_forces();
         count+=1;
+       
+        if (count%1000==0){
+            fileout<<N_max+4<<"\n";
+            fileout<<"Next\n";
+            for (int i=0;i<N_max;i++){
+                fileout<<"H"<<"\t"<<pos[1][i][0]<<"\t"<<pos[1][i][1]<<"\t"<<0.1<<"\n";
+            }
+            fileout<<"O"<<"\t"<<pos[0][0][0]<<"\t"<<pos[0][0][1]<<"\t"<<0.1<<"\n";
+            fileout<<"O"<<"\t"<<pos[0][1][0]<<"\t"<<pos[0][1][1]<<"\t"<<0.1<<"\n";
+            fileout<<"O"<<"\t"<<pos[0][2][0]<<"\t"<<pos[0][2][1]<<"\t"<<0.1<<"\n";
+            fileout<<"O"<<"\t"<<pos[0][3][0]<<"\t"<<pos[0][3][1]<<"\t"<<0.1<<"\n";
+            fileout.flush();
+        }
+
         for (int loopi=0;loopi<N_type;loopi++){
             for (int loopj=0;loopj<Ntype[loopi];loopj++){
                 fd_term = sqrt( 2 * dt / (gamma_i));
@@ -80,9 +98,22 @@ void Langevin_dynamics::equilibrate(){
                 del1=dt * fpos[loopi][loopj][0] + noise_0;
                 del2=dt * fpos[loopi][loopj][1] + noise_1;
                 if (fabs(del1)>1| fabs(del2)>1|| pos[loopi][loopj][0]>Lx || pos[loopi][loopj][0]<0||pos[loopi][loopj][1]>Ly||pos[loopi][loopj][1]<0){
-                    cout<<del1<<"\t"<<noise_0<<"\t"<<dt * fpos[loopi][loopj][0]<<"Kill program\n";
-                    cout<<del2<<"\t"<<noise_1<<"\t"<<dt * fpos[loopi][loopj][1]<<"Kill program\n";
-                    cout<<"Time"<<"\t"<<time<<"\n";
+                    cout<<del1<<"\t"<<noise_0<<"\t"<<dt * fpos[loopi][loopj][0]<<"Kill program\t"<<pos[loopi][loopj][0]<<"\t"<<pos[loopi][loopj][1]<<"\n";
+                    cout<<del2<<"\t"<<noise_1<<"\t"<<dt * fpos[loopi][loopj][1]<<"Kill program\t"<<pos[loopi][loopj][0]<<"\t"<<pos[loopi][loopj][1]<<"\n";
+                    cout<<"Time"<<"\t"<<time<<"\t"<<"Count\t"<<count<<"\n";
+                    cout<<"Atom"<<"\t"<<loopj<<"\n\n";
+                    cout.flush();
+                    fileout<<N_max+4<<"\n";
+                    fileout<<"Next\n";
+                    for (int i=0;i<N_max;i++){
+                        fileout<<"H"<<"\t"<<pos[1][i][0]<<"\t"<<pos[1][i][1]<<"\t"<<0.1<<"\n";
+                    }
+                    fileout<<"O"<<"\t"<<pos[0][0][0]<<"\t"<<pos[0][0][1]<<"\t"<<0.1<<"\n";
+                    fileout<<"O"<<"\t"<<pos[0][1][0]<<"\t"<<pos[0][1][1]<<"\t"<<0.1<<"\n";
+                    fileout<<"O"<<"\t"<<pos[0][2][0]<<"\t"<<pos[0][2][1]<<"\t"<<0.1<<"\n";
+                    fileout<<"O"<<"\t"<<pos[0][3][0]<<"\t"<<pos[0][3][1]<<"\t"<<0.1<<"\n";
+                    fileout.flush();
+
                     //Check for big overlaps during equilibration and handle them.
                     if (del1>1)
                         del1=1;
@@ -157,7 +188,7 @@ double Langevin_dynamics::propogate_dynamics(double dt){
     int yc;
     if (fabs(y1*S*dt)>3){
         cout<<"Panic in system"<<"\t"<<y1<<"\n";
-        cout.flush();
+        //cout.flush();
         if (y1*S*dt<0)
             return 20.0;
         if (y1*S*dt>0)
@@ -193,11 +224,11 @@ void Langevin_dynamics::compute_forces(){
                         x12=pos[loopi][loopk][0]-pos[loopj][loopl][0];
                         y12=pos[loopi][loopk][1]-pos[loopj][loopl][1];
                         if (x12>0.5*Lx)
-                            x12=Lx-x12;
+                            x12=x12-Lx;
                         if (x12<-0.5*Lx)
                             x12=x12+Lx;
                         if (y12>0.5*Ly)
-                            y12=Ly-y12;
+                            y12=y12-Ly;
                         if (y12<-0.5*Ly)
                             y12=y12+Ly;
                         r12=pow(x12*x12+y12*y12,0.5);
@@ -208,10 +239,10 @@ void Langevin_dynamics::compute_forces(){
                         if (r12!=0 && r12<pow(2,1.0/6.0)){
                          fpos[loopi][loopk][0]+=f12x;
                          fpos[loopi][loopk][1]+=f12y;
-                            if(r12<0.75){
-                                cout<<"Panic\t"<<pos[loopi][loopk][0]<<"\t"<<pos[loopj][loopl][0]<<"\t"<<pos[loopi][loopk][1]<<"\t"<<pos[loopj][loopl][1]<<"\t"<<f12x<<"\t"<<f12y<<"\n";
+                            //if(r12<0.75){
+                                //cout<<"Panic\t"<<pos[loopi][loopk][0]<<"\t"<<pos[loopj][loopl][0]<<"\t"<<pos[loopi][loopk][1]<<"\t"<<pos[loopj][loopl][1]<<"\t"<<f12x<<"\t"<<f12y<<"\n";
                                 //Just to check for big overlaps. Might happen during equilibration.
-                            }
+                            //}
                         }
                         if (loopi!=loopj){
                             if (r12!=0 && r12<pow(2,1.0/6.0)){
