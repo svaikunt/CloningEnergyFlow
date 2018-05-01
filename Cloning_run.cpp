@@ -57,7 +57,7 @@ int main( int argc,char *argv[]){
     
     int N_type=2;// number of particle types
     int Ntype[2];
-    Ntype[0]=4; //There are two particle of type 0
+    Ntype[0]=8; //There are two particle of type 0
     Ntype[1]=N_max;//Number of particles of type 1 input by user.
     for (int i=0;i<N_snapshots;i++){
         vector< vector< vector<double> > > pos;
@@ -76,7 +76,7 @@ int main( int argc,char *argv[]){
     }
     
     Langevin_dynamics masterlattice;
-    masterlattice.initialize(N_max,randomseed,S);
+    masterlattice.initialize(N_max,Ntype[0],randomseed,S);
     cout<<"Clone>>>>>>>>>>>>>>>Equilibrating master\n";
     masterlattice.equilibrate();
     
@@ -84,7 +84,7 @@ int main( int argc,char *argv[]){
         cout<<"Clone>>>>>>>>>>>>>>>\t"<<i<<"\n";
         //for (int j=0;j<20.0/dt;j++)
         //   double dump=masterlattice.propogate_dynamics(dt);
-        mylattice[i].initialize(N_max,randomseed+i,S);
+        mylattice[i].initialize(N_max,Ntype[0],randomseed+i,S);
         mylattice[i].equilibrate();
 		//mylattice[i].pos=masterlattice.pos;
         tpos[i]=mylattice[i].pos;
@@ -143,7 +143,7 @@ int main( int argc,char *argv[]){
     //Compute averages over the cloned lattices.
     double avgy=0; //Average value of dU12/dt will be stored in avgy.
     char outputfile[100];
-    sprintf(outputfile,"ystatsNmax%d.S%.3f.XYZ",N_max,S);
+    sprintf(outputfile,"ystatsNmax%d.N2%d.S%.3f.XYZ",N_max,Ntype[0],S);
     ofstream fileoutystats;
     fileoutystats.open(outputfile);
     fileoutystats<<"CGF\t"<<log(growthcgf)/t_analysis<<"\n";
@@ -155,20 +155,18 @@ int main( int argc,char *argv[]){
         avgy+=tempy;
     }
 	cout<<"avgenergy:"<<avgy*pow(N_snapshots,-1.0)<<"\n";
-    sprintf(outputfile,"SnapshotsN%d.S%.3f.XYZ",N_max,S);
+    sprintf(outputfile,"SnapshotsN%d.N2%d.S%.3f.XYZ",N_max,Ntype[0],S);
     ofstream fileout;
     fileout.open(outputfile);
     for (int loopi=0;loopi<N_snapshots;loopi++){
-        fileout<<N_max+4<<"\n";
+        fileout<<N_max+Ntype[0]<<"\n";
         fileout<<"Next\n";
         for (int i=0;i<N_max;i++){
-        fileout<<"H"<<"\t"<<mylattice[loopi].pos[1][i][0]<<"\t"<<mylattice[loopi].pos[1][i][1]<<"\t"<<0.1<<"\n";
+            fileout<<"H"<<"\t"<<mylattice[loopi].pos[1][i][0]<<"\t"<<mylattice[loopi].pos[1][i][1]<<"\t"<<0.1<<"\n";
         }
-        fileout<<"O"<<"\t"<<mylattice[loopi].pos[0][0][0]<<"\t"<<mylattice[loopi].pos[0][0][1]<<"\t"<<0.1<<"\n";
-        fileout<<"O"<<"\t"<<mylattice[loopi].pos[0][1][0]<<"\t"<<mylattice[loopi].pos[0][1][1]<<"\t"<<0.1<<"\n";
-        fileout<<"O"<<"\t"<<mylattice[loopi].pos[0][2][0]<<"\t"<<mylattice[loopi].pos[0][2][1]<<"\t"<<0.1<<"\n";
-        fileout<<"O"<<"\t"<<mylattice[loopi].pos[0][3][0]<<"\t"<<mylattice[loopi].pos[0][3][1]<<"\t"<<0.1<<"\n";
-        
+        for (int i=0;i<Ntype[0];i++){
+            fileout<<"O"<<"\t"<<mylattice[loopi].pos[0][i][0]<<"\t"<<mylattice[loopi].pos[0][i][1]<<"\t"<<0.1<<"\n";
+        }
     }
    
 	

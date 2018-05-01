@@ -27,11 +27,11 @@ Langevin_dynamics::Langevin_dynamics(){}
 
 
 
-void Langevin_dynamics::initialize(int N_max1,long int randomseed1,double S1){
+void Langevin_dynamics::initialize(int N_max1,int N_max2,long int randomseed1,double S1){
     Lx=10; //size of box
     Ly=10; //size of box
     N_type=2;// number of particle types
-    Ntype[0]=4; //There are two particle of type 0
+    Ntype[0]=N_max2; //There are two particle of type 0
     Ntype[1]=N_max1;//Number of particles of type 1 input by user.
 	S=S1; //value of S for biasing.
 	N_max=N_max1;

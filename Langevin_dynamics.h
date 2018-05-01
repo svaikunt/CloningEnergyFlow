@@ -44,7 +44,7 @@ public:
   
   Langevin_dynamics();
   ~Langevin_dynamics();
-  void initialize(int, long int,double);
+  void initialize(int, int, long int,double);
   double propogate_dynamics(double);
   void compute_forces();
   double computey();
