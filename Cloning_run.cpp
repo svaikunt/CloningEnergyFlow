@@ -30,7 +30,7 @@ int main( int argc,char *argv[]){
     double growthcgf=1;;
     if (argc==1){
 	  cout<<"Cloning simulation\n";
-	  cout<<"Usage N_max(number of particles) t_analysis randomseed timestep  S(biasing function)\n";
+	  cout<<"Usage N_max(number of particles of type1, there are 8 of type 0) t_analysis randomseed timestep  S(biasing function) Pe tau\n";
 	  exit(1);
 	}
 	int N_max=atoi(argv[1]);
@@ -38,7 +38,9 @@ int main( int argc,char *argv[]){
 	long int randomseed=atoi(argv[3]);
 	double dt=atof(argv[4]);
 	double S=atof(argv[5]);
-	int N_snapshots=100;
+	double Pe=atof(argv[6]);
+	double tau=atof(argv[7]);
+	int N_snapshots=100;//number of clones
     
     //Initiating gsl
     gsl_rng *r=gsl_rng_alloc(gsl_rng_taus2);
@@ -57,7 +59,7 @@ int main( int argc,char *argv[]){
     
     int N_type=2;// number of particle types
     int Ntype[2];
-    Ntype[0]=8; //There are two particle of type 0
+    Ntype[0]=8; //There are 8 particle of type 0
     Ntype[1]=N_max;//Number of particles of type 1 input by user.
     for (int i=0;i<N_snapshots;i++){
         vector< vector< vector<double> > > pos;
@@ -78,14 +80,14 @@ int main( int argc,char *argv[]){
     Langevin_dynamics masterlattice;
     masterlattice.initialize(N_max,Ntype[0],randomseed,S);
     cout<<"Clone>>>>>>>>>>>>>>>Equilibrating master\n";
-    masterlattice.equilibrate();
+    masterlattice.equilibrate(Pe,tau);
     
     for (int i=0;i<N_snapshots;i++){
         cout<<"Clone>>>>>>>>>>>>>>>\t"<<i<<"\n";
         //for (int j=0;j<20.0/dt;j++)
         //   double dump=masterlattice.propogate_dynamics(dt);
         mylattice[i].initialize(N_max,Ntype[0],randomseed+i,S);
-        mylattice[i].equilibrate();
+        mylattice[i].equilibrate(Pe,tau);
 		//mylattice[i].pos=masterlattice.pos;
         tpos[i]=mylattice[i].pos;
     }
@@ -95,7 +97,7 @@ int main( int argc,char *argv[]){
         double sumyc=0;
         for (int loopj=0;loopj<N_snapshots;loopj++){
             //j=pick randomly from the clones
-            y[loopj]=mylattice[loopj].propogate_dynamics(dt);//propogate clone.
+            y[loopj]=mylattice[loopj].propogate_dynamics(dt,Pe,teetotaler,tau);//propogate clone.
             
             tpos[loopj]=mylattice[loopj].pos;//storing clone positions for switching.
             sumy+=y[loopj];
@@ -149,7 +151,7 @@ int main( int argc,char *argv[]){
     fileoutystats<<"CGF\t"<<log(growthcgf)/t_analysis<<"\n";
     for (int loopi=0;loopi<N_snapshots;loopi++){
         mylattice[loopi].compute_forces();
-        double tempy=mylattice[loopi].computey();
+        double tempy=mylattice[loopi].computey(Pe,t_analysis,tau);
         fileoutystats<<tempy<<"\n";
         cout<<"Compute y is "<<tempy<<"\t Clone is \t"<<loopi<<"\n";
         avgy+=tempy;

@@ -1,4 +1,4 @@
-Run program using ./cloning.out N_max(number of particles) IntegrationTime RandomSeed IntegrationTimestep dt
-./cloning.out 8 10 124515911 0.00001 -0.1
+Run program using ./cloning.out N_max(number of particles) IntegrationTime RandomSeed IntegrationTimestep dt S Pe \tau
+./cloning.out 8 10 124515911 0.00001 -0.1 1 1 
 
 

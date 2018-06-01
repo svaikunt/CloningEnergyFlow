@@ -45,10 +45,10 @@ public:
   Langevin_dynamics();
   ~Langevin_dynamics();
   void initialize(int, int, long int,double);
-  double propogate_dynamics(double);
+  double propogate_dynamics(double,double, double, double);
   void compute_forces();
-  double computey();
-  void equilibrate();
+  double computey(double, double, double);
+  void equilibrate(double, double);
 };
 
 #endif

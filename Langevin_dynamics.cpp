@@ -61,10 +61,11 @@ void Langevin_dynamics::initialize(int N_max1,int N_max2,long int randomseed1,do
     //pos[type][Number][dimension];
 }
 
-void Langevin_dynamics::equilibrate(){
+void Langevin_dynamics::equilibrate(double Pe, double tau){
     double fd_term,noise_0,noise_1;
     double del1,del2;
     gamma_i=1;
+    int typebin=0;
     //Compute forces, evolve dynamics, return y factor
     double time=0;
     double dt=0.0001;
@@ -91,12 +92,16 @@ void Langevin_dynamics::equilibrate(){
         }
 
         for (int loopi=0;loopi<N_type;loopi++){
+		if (loopi==0)
+			typebin=1;
+		else 
+			typebin=0;
             for (int loopj=0;loopj<Ntype[loopi];loopj++){
                 fd_term = sqrt( 2 * dt / (gamma_i));
                 noise_0 = fd_term*gsl_ran_gaussian(r,1);
                 noise_1 = fd_term * gsl_ran_gaussian(r,1);
-                del1=dt * fpos[loopi][loopj][0] + noise_0;
-                del2=dt * fpos[loopi][loopj][1] + noise_1;
+                del1=dt * (fpos[loopi][loopj][0]+typebin*Pe*cos(2*M_PI*time/tau)) + noise_0;
+                del2=dt * (fpos[loopi][loopj][1]+typebin*Pe*sin(2*M_PI*time/tau)) + noise_1;
                 if (fabs(del1)>1| fabs(del2)>1|| pos[loopi][loopj][0]>Lx || pos[loopi][loopj][0]<0||pos[loopi][loopj][1]>Ly||pos[loopi][loopj][1]<0){
                     cout<<del1<<"\t"<<noise_0<<"\t"<<dt * fpos[loopi][loopj][0]<<"Kill program\t"<<pos[loopi][loopj][0]<<"\t"<<pos[loopi][loopj][1]<<"\n";
                     cout<<del2<<"\t"<<noise_1<<"\t"<<dt * fpos[loopi][loopj][1]<<"Kill program\t"<<pos[loopi][loopj][0]<<"\t"<<pos[loopi][loopj][1]<<"\n";
@@ -145,10 +150,11 @@ void Langevin_dynamics::equilibrate(){
 
 }
 
-double Langevin_dynamics::propogate_dynamics(double dt){
+double Langevin_dynamics::propogate_dynamics(double dt,double Pe, double t_c, double tau){
     double fd_term,noise_0,noise_1;
     double del1,del2;
     gamma_i=1;
+    int typebin=0;
     //Compute forces, evolve dynamics, return y factor
     compute_forces();
     for (int loopi=0;loopi<N_type;loopi++){
@@ -156,8 +162,12 @@ double Langevin_dynamics::propogate_dynamics(double dt){
             fd_term = sqrt( 2 * dt / (gamma_i));
             noise_0 = fd_term*gsl_ran_gaussian(r,1);
             noise_1 = fd_term * gsl_ran_gaussian(r,1);
-            del1=dt * fpos[loopi][loopj][0] + noise_0;
-            del2=dt * fpos[loopi][loopj][1] + noise_1;
+	    if(loopi==0)
+		    typebin=1;
+	    else 
+		    typebin=0;
+            del1=dt * (fpos[loopi][loopj][0] +typebin*Pe*cos(2*M_PI*t_c/tau))+ noise_0;
+            del2=dt * (fpos[loopi][loopj][1]+typebin*Pe*sin(2*M_PI*t_c/tau)) + noise_1;
             if (fabs(del1)>0.1*Lx|| fabs(del2)>0.1*Lx){
                 cout<<del1<<"\t"<<del2<<"Kill program\n";
                 //assert(0);//To check for wildly inappropriate moves.
@@ -182,7 +192,7 @@ double Langevin_dynamics::propogate_dynamics(double dt){
                 pos[loopi][loopj][1]+=Ly;
         }
     }
-    double y1=computey();
+    double y1=computey(Pe,t_c,tau);
     double y2=exp(-dt*S*y1);
     //cout<<y<<"\n";
     int yc;
@@ -259,18 +269,23 @@ void Langevin_dynamics::compute_forces(){
     }
 }
 
-double Langevin_dynamics::computey(){
+double Langevin_dynamics::computey(double Pe, double t_c, double tau){
     double y[2];
     y[0]=0;
     y[1]=0;
     double xy[2];
     xy[0]=0;
     xy[1]=0;
+    int typebin=0;
     compute_forces();
     for (int loopi=0;loopi<N_type;loopi++){
+	    if (loopi==0)
+		    typebin=1;
+	    else 
+		    typebin=0;
         for(int loopj=0;loopj<Ntype[loopi];loopj++){
             xy[loopi]+=fpos[loopi][loopj][0]*(-fpostype[loopi][loopj][0])+fpos[loopi][loopj][1]*(-fpostype[loopi][loopj][1]);
-            y[loopi]+=fpos[loopi][loopj][0]*(-fpostype[loopi][loopj][0])+fpos[loopi][loopj][1]*(-fpostype[loopi][loopj][1])+upostype[loopi][loopj][0]+upostype[loopi][loopj][1];
+            y[loopi]+=(fpos[loopi][loopj][0]+typebin*Pe*cos(2*M_PI*t_c/tau))*(-fpostype[loopi][loopj][0])+(fpos[loopi][loopj][1]+typebin*Pe*sin(2*M_PI*t_c/tau))*(-fpostype[loopi][loopj][1])+upostype[loopi][loopj][0]+upostype[loopi][loopj][1];
         }
     }
     return y[0]+y[1];//yfactor computed for cloning.
