@@ -1,6 +1,3 @@
-/*
-Library of functions for lattice gas simulations and otherwise. C++ implemntations, making them classes. 
-*/
 //#define CLUSTER
 #define PI 3.14159
 #include <cstdlib>
@@ -27,9 +24,12 @@ Langevin_dynamics::Langevin_dynamics(){}
 
 
 
-void Langevin_dynamics::initialize(int N_max1,int N_max2,long int randomseed1,double S1){
-    Lx=10; //size of box
-    Ly=10; //size of box
+void Langevin_dynamics::initialize(int N_max1,int N_max2,long int randomseed1,double S1,int inputsoft){
+    ksoft=10;
+    soft=inputsoft;
+    asoft=1;
+    Lx=7.0; //size of box
+    Ly=7.0; //size of box
     N_type=2;// number of particle types
     Ntype[0]=N_max2; //There are two particle of type 0
     Ntype[1]=N_max1;//Number of particles of type 1 input by user.
@@ -68,34 +68,32 @@ void Langevin_dynamics::equilibrate(double Pe, double tau){
     int typebin=0;
     //Compute forces, evolve dynamics, return y factor
     double time=0;
-    double dt=0.0001;
+    double dt=0.0005;
+    int totaltimeint=dt*200000;
+    if (soft==1){
+	    dt=0.005;
+    }
     int count=0;
     char outputfile[100];
     sprintf(outputfile,"EquilibriumN%d.S%.3f.XYZ",N_max,S);
     ofstream fileout;
     fileout.open(outputfile);
-    for (time=0;time<dt*100000;time=time+dt){
+    for (time=0;time<totaltimeint;time=time+dt){
         compute_forces();
         count+=1;
        
         if (count%1000==0){
-            fileout<<N_max+4<<"\n";
-            fileout<<"Next\n";
+           fileout<<N_max+Ntype[0]<<"\n";
+           fileout<<"Next\n";
             for (int i=0;i<N_max;i++){
                 fileout<<"H"<<"\t"<<pos[1][i][0]<<"\t"<<pos[1][i][1]<<"\t"<<0.1<<"\n";
             }
-            fileout<<"O"<<"\t"<<pos[0][0][0]<<"\t"<<pos[0][0][1]<<"\t"<<0.1<<"\n";
-            fileout<<"O"<<"\t"<<pos[0][1][0]<<"\t"<<pos[0][1][1]<<"\t"<<0.1<<"\n";
-            fileout<<"O"<<"\t"<<pos[0][2][0]<<"\t"<<pos[0][2][1]<<"\t"<<0.1<<"\n";
-            fileout<<"O"<<"\t"<<pos[0][3][0]<<"\t"<<pos[0][3][1]<<"\t"<<0.1<<"\n";
-            fileout.flush();
-        }
+	    for (int i=0;i<Ntype[0];i++){
+	        fileout<<"O"<<"\t"<<pos[0][i][0]<<"\t"<<pos[0][i][1]<<"\t"<<0.1<<"\n";	    
+	    }
+	}
 
         for (int loopi=0;loopi<N_type;loopi++){
-		if (loopi==0)
-			typebin=1;
-		else 
-			typebin=0;
             for (int loopj=0;loopj<Ntype[loopi];loopj++){
                 fd_term = sqrt( 2 * dt / (gamma_i));
                 noise_0 = fd_term*gsl_ran_gaussian(r,1);
@@ -108,16 +106,16 @@ void Langevin_dynamics::equilibrate(double Pe, double tau){
                     cout<<"Time"<<"\t"<<time<<"\t"<<"Count\t"<<count<<"\n";
                     cout<<"Atom"<<"\t"<<loopj<<"\n\n";
                     cout.flush();
-                    fileout<<N_max+4<<"\n";
-                    fileout<<"Next\n";
-                    for (int i=0;i<N_max;i++){
-                        fileout<<"H"<<"\t"<<pos[1][i][0]<<"\t"<<pos[1][i][1]<<"\t"<<0.1<<"\n";
-                    }
-                    fileout<<"O"<<"\t"<<pos[0][0][0]<<"\t"<<pos[0][0][1]<<"\t"<<0.1<<"\n";
-                    fileout<<"O"<<"\t"<<pos[0][1][0]<<"\t"<<pos[0][1][1]<<"\t"<<0.1<<"\n";
-                    fileout<<"O"<<"\t"<<pos[0][2][0]<<"\t"<<pos[0][2][1]<<"\t"<<0.1<<"\n";
-                    fileout<<"O"<<"\t"<<pos[0][3][0]<<"\t"<<pos[0][3][1]<<"\t"<<0.1<<"\n";
-                    fileout.flush();
+                    //fileout<<N_max+4<<"\n";
+                    //fileout<<"Next\n";
+                    //for (int i=0;i<N_max;i++){
+                    //    fileout<<"H"<<"\t"<<pos[1][i][0]<<"\t"<<pos[1][i][1]<<"\t"<<0.1<<"\n";
+                    // }
+                    //fileout<<"O"<<"\t"<<pos[0][0][0]<<"\t"<<pos[0][0][1]<<"\t"<<0.1<<"\n";
+                    //fileout<<"O"<<"\t"<<pos[0][1][0]<<"\t"<<pos[0][1][1]<<"\t"<<0.1<<"\n";
+                    //fileout<<"O"<<"\t"<<pos[0][2][0]<<"\t"<<pos[0][2][1]<<"\t"<<0.1<<"\n";
+                    //fileout<<"O"<<"\t"<<pos[0][3][0]<<"\t"<<pos[0][3][1]<<"\t"<<0.1<<"\n";
+                    //fileout.flush();
 
                     //Check for big overlaps during equilibration and handle them.
                     if (del1>1)
@@ -162,10 +160,6 @@ double Langevin_dynamics::propogate_dynamics(double dt,double Pe, double t_c, do
             fd_term = sqrt( 2 * dt / (gamma_i));
             noise_0 = fd_term*gsl_ran_gaussian(r,1);
             noise_1 = fd_term * gsl_ran_gaussian(r,1);
-	    if(loopi==0)
-		    typebin=1;
-	    else 
-		    typebin=0;
             del1=dt * (fpos[loopi][loopj][0] +typebin*Pe*cos(2*M_PI*t_c/tau))+ noise_0;
             del2=dt * (fpos[loopi][loopj][1]+typebin*Pe*sin(2*M_PI*t_c/tau)) + noise_1;
             if (fabs(del1)>0.1*Lx|| fabs(del2)>0.1*Lx){
@@ -222,6 +216,7 @@ void Langevin_dynamics::compute_forces(){
     fpos=zerovec;
     fpostype=zerovec;
     upostype=zerovec;
+    double typebin=1.0;
     for (int loopi=0;loopi<N_type;loopi++){
         for(int loopk=0;loopk<Ntype[loopi];loopk++){
             for(int loopj=0;loopj<N_type;loopj++){
@@ -242,11 +237,22 @@ void Langevin_dynamics::compute_forces(){
                         if (y12<-0.5*Ly)
                             y12=y12+Ly;
                         r12=pow(x12*x12+y12*y12,0.5);
-                        f12x=4*(12*pow(r12,-14)-6*pow(r12,-8))*x12;
-                        f12y=4*(12*pow(r12,-14)-6*pow(r12,-8))*y12;
+			if (loopi!=loopj)
+				typebin=1.0;
+			else 
+				typebin=1.0;
+                        f12x=4*(12*pow(r12,-14)-6*pow(r12,-8))*x12*typebin;
+                        f12y=4*(12*pow(r12,-14)-6*pow(r12,-8))*y12*typebin;
                         f122x=-4*(12*pow(r12,-13)-6*pow(r12,-7))*pow(r12,-1.0)+4*(168*pow(r12,-16)-48*pow(r12,-10.0))*(x12)*x12;
                         f122y=-4*(12*pow(r12,-13)-6*pow(r12,-7))*pow(r12,-1.0)+4*(168*pow(r12,-16)-48*pow(r12,-10.0))*(y12)*y12;
-                        if (r12!=0 && r12<pow(2,1.0/6.0)){
+			if (soft==1){
+			  f12x=2*ksoft*(1-r12/asoft)*x12/(r12*asoft);
+			  f12y=2*ksoft*(1-r12/asoft)*y12/(r12*asoft);
+			  f122x=2*ksoft*(x12*x12*pow(r12,-3.0)*pow(asoft,-1.0)-pow(r12*asoft,-1.0)+pow(asoft,-2.0));
+			  f122y=2*ksoft*(y12*y12*pow(r12,-3.0)*pow(asoft,-1.0)-pow(r12*asoft,-1.0)+pow(asoft,-2.0));
+
+			}
+                        if (r12!=0 && r12<pow(2,1.0/6.0) && soft==0){
                          fpos[loopi][loopk][0]+=f12x;
                          fpos[loopi][loopk][1]+=f12y;
                             //if(r12<0.75){
@@ -254,13 +260,23 @@ void Langevin_dynamics::compute_forces(){
                                 //Just to check for big overlaps. Might happen during equilibration.
                             //}
                         }
+			if (r12!=0 && r12<asoft && soft==1){
+                          fpos[loopi][loopk][0]+=f12x;
+			  fpos[loopi][loopk][1]+=f12y;
+			}
                         if (loopi!=loopj){
-                            if (r12!=0 && r12<pow(2,1.0/6.0)){
+                            if (r12!=0 && r12<pow(2,1.0/6.0) && soft==0){
                              fpostype[loopi][loopk][0]+=f12x;
                              fpostype[loopi][loopk][1]+=f12y;
                              upostype[loopi][loopk][0]+=f122x;
                              upostype[loopi][loopk][1]+=f122y;
                             }
+                            if (r12!=0 && r12<asoft && soft==1){
+			     fpostype[loopi][loopk][0]+=f12x;
+			     fpostype[loopi][loopk][1]+=f12y;
+			     upostype[loopi][loopk][0]+=f122x;
+		             upostype[loopi][loopk][1]+=f122y;
+			    }
                         }
                     }
                 }
@@ -279,10 +295,6 @@ double Langevin_dynamics::computey(double Pe, double t_c, double tau){
     int typebin=0;
     compute_forces();
     for (int loopi=0;loopi<N_type;loopi++){
-	    if (loopi==0)
-		    typebin=1;
-	    else 
-		    typebin=0;
         for(int loopj=0;loopj<Ntype[loopi];loopj++){
             xy[loopi]+=fpos[loopi][loopj][0]*(-fpostype[loopi][loopj][0])+fpos[loopi][loopj][1]*(-fpostype[loopi][loopj][1]);
             y[loopi]+=(fpos[loopi][loopj][0]+typebin*Pe*cos(2*M_PI*t_c/tau))*(-fpostype[loopi][loopj][0])+(fpos[loopi][loopj][1]+typebin*Pe*sin(2*M_PI*t_c/tau))*(-fpostype[loopi][loopj][1])+upostype[loopi][loopj][0]+upostype[loopi][loopj][1];

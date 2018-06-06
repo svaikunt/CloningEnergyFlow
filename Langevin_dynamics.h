@@ -27,6 +27,9 @@ private:
 	int N_max;
 	double S;
 	double gamma_i;
+	double ksoft;
+	double asoft;
+	int soft;
 public:
   
   ofstream fileout_traj,fileout_activity;
@@ -44,7 +47,7 @@ public:
   
   Langevin_dynamics();
   ~Langevin_dynamics();
-  void initialize(int, int, long int,double);
+  void initialize(int, int, long int,double,int);
   double propogate_dynamics(double,double, double, double);
   void compute_forces();
   double computey(double, double, double);
