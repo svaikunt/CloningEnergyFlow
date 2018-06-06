@@ -297,7 +297,7 @@ double Langevin_dynamics::computey(double Pe, double t_c, double tau){
     for (int loopi=0;loopi<N_type;loopi++){
         for(int loopj=0;loopj<Ntype[loopi];loopj++){
             xy[loopi]+=fpos[loopi][loopj][0]*(-fpostype[loopi][loopj][0])+fpos[loopi][loopj][1]*(-fpostype[loopi][loopj][1]);
-            y[loopi]+=(fpos[loopi][loopj][0]+typebin*Pe*cos(2*M_PI*t_c/tau))*(-fpostype[loopi][loopj][0])+(fpos[loopi][loopj][1]+typebin*Pe*sin(2*M_PI*t_c/tau))*(-fpostype[loopi][loopj][1])+upostype[loopi][loopj][0]+upostype[loopi][loopj][1];
+            y[loopi]+=(fpos[loopi][loopj][0]+typebin*Pe*cos(2*M_PI*t_c/tau))*(-fpostype[loopi][loopj][0])+(fpos[loopi][loopj][1]+typebin*Pe*sin(2*M_PI*t_c/tau))*(-fpostype[loopi][loopj][1])-upostype[loopi][loopj][0]-upostype[loopi][loopj][1];
         }
     }
     return y[0]+y[1];//yfactor computed for cloning.
