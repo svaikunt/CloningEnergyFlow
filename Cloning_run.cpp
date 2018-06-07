@@ -41,9 +41,9 @@ int main( int argc,char *argv[]){
 	double Pe=atof(argv[6]);
 	double tau=atof(argv[7]);
 	int soft=atoi(argv[8]);
-	int N_snapshots=100;//number of clones
-        double Lx=7.0;
-        double Ly=7.0;	
+	int N_snapshots=500;//number of clones
+        double Lx=8.0;
+        double Ly=8.0;	
     //Initiating gsl
     gsl_rng *r=gsl_rng_alloc(gsl_rng_taus2);
     gsl_rng_set(r,randomseed);

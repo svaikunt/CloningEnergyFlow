@@ -28,8 +28,8 @@ void Langevin_dynamics::initialize(int N_max1,int N_max2,long int randomseed1,do
     ksoft=10;
     soft=inputsoft;
     asoft=1;
-    Lx=7.0; //size of box
-    Ly=7.0; //size of box
+    Lx=8.0; //size of box
+    Ly=8.0; //size of box
     N_type=2;// number of particle types
     Ntype[0]=N_max2; //There are two particle of type 0
     Ntype[1]=N_max1;//Number of particles of type 1 input by user.
@@ -246,10 +246,10 @@ void Langevin_dynamics::compute_forces(){
                         f122x=-4*(12*pow(r12,-13)-6*pow(r12,-7))*pow(r12,-1.0)+4*(168*pow(r12,-16)-48*pow(r12,-10.0))*(x12)*x12;
                         f122y=-4*(12*pow(r12,-13)-6*pow(r12,-7))*pow(r12,-1.0)+4*(168*pow(r12,-16)-48*pow(r12,-10.0))*(y12)*y12;
 			if (soft==1){
-			  f12x=2*ksoft*(1-r12/asoft)*x12/(r12*asoft);
-			  f12y=2*ksoft*(1-r12/asoft)*y12/(r12*asoft);
-			  f122x=2*ksoft*(x12*x12*pow(r12,-3.0)*pow(asoft,-1.0)-pow(r12*asoft,-1.0)+pow(asoft,-2.0));
-			  f122y=2*ksoft*(y12*y12*pow(r12,-3.0)*pow(asoft,-1.0)-pow(r12*asoft,-1.0)+pow(asoft,-2.0));
+			  f12x=ksoft*(exp(-r12/asoft))*x12/(r12*asoft);
+			  f12y=ksoft*(exp(-r12/asoft))*y12/(r12*asoft);
+			  f122x=ksoft*(exp(-r12/asoft)*(asoft*x12*x12*pow(r12,3.0)+x12*x12*pow(r12,4.0)-asoft*pow(r12,5.0))*pow(r12,-6.0)*pow(asoft,-2.0));
+			  f122y=ksoft*(exp(-r12/asoft)*(asoft*y12*y12*pow(r12,3.0)+y12*y12*pow(r12,4.0)-asoft*pow(r12,5.0))*pow(r12,-6.0)*pow(asoft,-2.0));
 
 			}
                         if (r12!=0 && r12<pow(2,1.0/6.0) && soft==0){
@@ -260,7 +260,7 @@ void Langevin_dynamics::compute_forces(){
                                 //Just to check for big overlaps. Might happen during equilibration.
                             //}
                         }
-			if (r12!=0 && r12<asoft && soft==1){
+			if (r12!=0 && r12<4.0*asoft && soft==1){
                           fpos[loopi][loopk][0]+=f12x;
 			  fpos[loopi][loopk][1]+=f12y;
 			}
@@ -271,7 +271,7 @@ void Langevin_dynamics::compute_forces(){
                              upostype[loopi][loopk][0]+=f122x;
                              upostype[loopi][loopk][1]+=f122y;
                             }
-                            if (r12!=0 && r12<asoft && soft==1){
+                            if (r12!=0 && r12<3*asoft && soft==1){
 			     fpostype[loopi][loopk][0]+=f12x;
 			     fpostype[loopi][loopk][1]+=f12y;
 			     upostype[loopi][loopk][0]+=f122x;
@@ -297,7 +297,7 @@ double Langevin_dynamics::computey(double Pe, double t_c, double tau){
     for (int loopi=0;loopi<N_type;loopi++){
         for(int loopj=0;loopj<Ntype[loopi];loopj++){
             xy[loopi]+=fpos[loopi][loopj][0]*(-fpostype[loopi][loopj][0])+fpos[loopi][loopj][1]*(-fpostype[loopi][loopj][1]);
-            y[loopi]+=(fpos[loopi][loopj][0]+typebin*Pe*cos(2*M_PI*t_c/tau))*(-fpostype[loopi][loopj][0])+(fpos[loopi][loopj][1]+typebin*Pe*sin(2*M_PI*t_c/tau))*(-fpostype[loopi][loopj][1])-upostype[loopi][loopj][0]-upostype[loopi][loopj][1];
+            y[loopi]+=(fpos[loopi][loopj][0]+typebin*Pe*cos(2*M_PI*t_c/tau))*(-fpostype[loopi][loopj][0])+(fpos[loopi][loopj][1]+typebin*Pe*sin(2*M_PI*t_c/tau))*(-fpostype[loopi][loopj][1])+upostype[loopi][loopj][0]+upostype[loopi][loopj][1];
         }
     }
     return y[0]+y[1];//yfactor computed for cloning.
