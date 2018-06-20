@@ -1,4 +1,3 @@
-Run program using ./cloning.out N_max(number of particles) IntegrationTime RandomSeed IntegrationTimestep dt S Pe \tau
-./cloning.out 8 10 124515911 0.00001 -0.1 1 1 
+Run program using ./cloning.out N_max(number of particles of type1, there are 4 of type 0) t_analysis randomseed timestep  S(biasing function)(value of biasing function. 0 is no bias) Pe(set to 0) tau(set to 1) soft(set soft=1) ksoft_solute_solvent(scaling tracer-bath interaction energy k=1 is default)  N_Snapshots (number of clones)  
 
-
+Sample: ./cloning.out 8 0.00 -15415156 0.005 0 0 1 1 1.2
