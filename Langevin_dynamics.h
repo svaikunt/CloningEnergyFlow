@@ -30,6 +30,7 @@ private:
 	double ksoft;
 	double asoft;
 	int soft;
+	double k12;
 public:
   
   ofstream fileout_traj,fileout_activity;
@@ -47,7 +48,7 @@ public:
   
   Langevin_dynamics();
   ~Langevin_dynamics();
-  void initialize(int, int, long int,double,int);
+  void initialize(int, int, long int,double,int,double);
   double propogate_dynamics(double,double, double, double);
   void compute_forces();
   double computey(double, double, double);

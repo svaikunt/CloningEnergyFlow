@@ -24,12 +24,13 @@ Langevin_dynamics::Langevin_dynamics(){}
 
 
 
-void Langevin_dynamics::initialize(int N_max1,int N_max2,long int randomseed1,double S1,int inputsoft){
-    ksoft=10;
+void Langevin_dynamics::initialize(int N_max1,int N_max2,long int randomseed1,double S1,int inputsoft,double ksolute_solvent){
+    ksoft=1.0;
+    k12=ksolute_solvent;
     soft=inputsoft;
-    asoft=1;
-    Lx=8.0; //size of box
-    Ly=8.0; //size of box
+    asoft=2.0;
+    Lx=7.0; //size of box
+    Ly=7.0; //size of box
     N_type=2;// number of particle types
     Ntype[0]=N_max2; //There are two particle of type 0
     Ntype[1]=N_max1;//Number of particles of type 1 input by user.
@@ -68,11 +69,11 @@ void Langevin_dynamics::equilibrate(double Pe, double tau){
     int typebin=0;
     //Compute forces, evolve dynamics, return y factor
     double time=0;
-    double dt=0.0005;
-    int totaltimeint=dt*200000;
+    double dt=0.0001;
     if (soft==1){
-	    dt=0.005;
+	    dt=0.01;
     }
+    int totaltimeint=dt*100000;
     int count=0;
     char outputfile[100];
     sprintf(outputfile,"EquilibriumN%d.S%.3f.XYZ",N_max,S);
@@ -221,6 +222,7 @@ void Langevin_dynamics::compute_forces(){
         for(int loopk=0;loopk<Ntype[loopi];loopk++){
             for(int loopj=0;loopj<N_type;loopj++){
                 for(int loopl=0;loopl<Ntype[loopj];loopl++){
+                    if (loopi!=loopj || loopi==loopj){
                     f12x=0;
                     f12y=0;
                     f122x=0;
@@ -238,21 +240,25 @@ void Langevin_dynamics::compute_forces(){
                             y12=y12+Ly;
                         r12=pow(x12*x12+y12*y12,0.5);
 			if (loopi!=loopj)
-				typebin=1.0;
+				typebin=k12;
 			else 
 				typebin=1.0;
-                        f12x=4*(12*pow(r12,-14)-6*pow(r12,-8))*x12*typebin;
-                        f12y=4*(12*pow(r12,-14)-6*pow(r12,-8))*y12*typebin;
-                        f122x=-4*(12*pow(r12,-13)-6*pow(r12,-7))*pow(r12,-1.0)+4*(168*pow(r12,-16)-48*pow(r12,-10.0))*(x12)*x12;
-                        f122y=-4*(12*pow(r12,-13)-6*pow(r12,-7))*pow(r12,-1.0)+4*(168*pow(r12,-16)-48*pow(r12,-10.0))*(y12)*y12;
+            f12x=4*(12*pow(r12,-14)-6*pow(r12,-8))*x12*typebin;
+            f12y=4*(12*pow(r12,-14)-6*pow(r12,-8))*y12*typebin;
+            f122x=-4*(12*pow(r12,-13)-6*pow(r12,-7))*pow(r12,-1.0)+4*(168*pow(r12,-16)-48*pow(r12,-10.0))*(x12)*x12;
+            f122y=-4*(12*pow(r12,-13)-6*pow(r12,-7))*pow(r12,-1.0)+4*(168*pow(r12,-16)-48*pow(r12,-10.0))*(y12)*y12;
 			if (soft==1){
-			  f12x=ksoft*(exp(-r12/asoft))*x12/(r12*asoft);
-			  f12y=ksoft*(exp(-r12/asoft))*y12/(r12*asoft);
-			  f122x=ksoft*(exp(-r12/asoft)*(asoft*x12*x12*pow(r12,3.0)+x12*x12*pow(r12,4.0)-asoft*pow(r12,5.0))*pow(r12,-6.0)*pow(asoft,-2.0));
-			  f122y=ksoft*(exp(-r12/asoft)*(asoft*y12*y12*pow(r12,3.0)+y12*y12*pow(r12,4.0)-asoft*pow(r12,5.0))*pow(r12,-6.0)*pow(asoft,-2.0));
+			  f12x=-typebin*2*ksoft*exp(-1*pow(r12-asoft,-2.0))*pow(r12-asoft,-3.0)*x12/r12;
+			  f12y=-typebin*2*ksoft*exp(-1*pow(r12-asoft,-2.0))*pow(r12-asoft,-3.0)*y12/r12;
+			  //f12x=ksoft*(exp(-r12/asoft))*x12/(r12*asoft);
+			  //f12y=ksoft*(exp(-r12/asoft))*y12/(r12*asoft);
+			  f122x=typebin*ksoft*exp(-1*pow(r12-asoft,-2.0))*(2*pow(r12,8.0)+pow(asoft,3.0)*(2*x12*x12*pow(r12,3.0)-2*pow(r12,5.0))+x12*x12*(4*pow(r12,4.0)-8*pow(r12,6.0))+pow(asoft,2.0)*(-12*x12*x12*pow(r12,4.0)+6*pow(r12,6.0))+asoft*(18*x12*x12*pow(r12,5.0)-6*pow(r12,7.0)))/(pow(r12,6.0)*pow(-asoft+r12,6.0));
+              f122y=typebin*ksoft*exp(-1*pow(r12-asoft,-2.0))*(2*pow(r12,8.0)+pow(asoft,3.0)*(2*y12*y12*pow(r12,3.0)-2*pow(r12,5.0))+y12*y12*(4*pow(r12,4.0)-8*pow(r12,6.0))+pow(asoft,2.0)*(-12*y12*y12*pow(r12,4.0)+6*pow(r12,6.0))+asoft*(18*y12*y12*pow(r12,5.0)-6*pow(r12,7.0)))/(pow(r12,6.0)*pow(-asoft+r12,6.0));
+			  //f122x=ksoft*(exp(-r12/asoft)*(asoft*x12*x12*pow(r12,3.0)+x12*x12*pow(r12,4.0)-asoft*pow(r12,5.0))*pow(r12,-6.0)*pow(asoft,-2.0));
+			  //f122y=ksoft*(exp(-r12/asoft)*(asoft*y12*y12*pow(r12,3.0)+y12*y12*pow(r12,4.0)-asoft*pow(r12,5.0))*pow(r12,-6.0)*pow(asoft,-2.0));
 
 			}
-                        if (r12!=0 && r12<pow(2,1.0/6.0) && soft==0){
+                        if (r12!=0 && r12<pow(2,1.0/6.0) && soft==0 ){
                          fpos[loopi][loopk][0]+=f12x;
                          fpos[loopi][loopk][1]+=f12y;
                             //if(r12<0.75){
@@ -260,7 +266,7 @@ void Langevin_dynamics::compute_forces(){
                                 //Just to check for big overlaps. Might happen during equilibration.
                             //}
                         }
-			if (r12!=0 && r12<4.0*asoft && soft==1){
+			if (r12!=0 && r12<asoft && soft==1 ){
                           fpos[loopi][loopk][0]+=f12x;
 			  fpos[loopi][loopk][1]+=f12y;
 			}
@@ -271,13 +277,14 @@ void Langevin_dynamics::compute_forces(){
                              upostype[loopi][loopk][0]+=f122x;
                              upostype[loopi][loopk][1]+=f122y;
                             }
-                            if (r12!=0 && r12<3*asoft && soft==1){
+                            if (r12!=0 && r12<asoft && soft==1){
 			     fpostype[loopi][loopk][0]+=f12x;
 			     fpostype[loopi][loopk][1]+=f12y;
 			     upostype[loopi][loopk][0]+=f122x;
 		             upostype[loopi][loopk][1]+=f122y;
 			    }
                         }
+                    }
                     }
                 }
             }
