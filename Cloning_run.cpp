@@ -97,7 +97,7 @@ int main( int argc,char *argv[]){
     }
     
     char outputfile1[100];
-    sprintf(outputfile1,"g_rN%d.N2%d.S%.3f.Lx%.2f.Clone%d.Soft%d.ktracer%.2f.XYZ",N_max,Ntype[0],S,Lx,N_snapshots,soft,ksoft);
+    sprintf(outputfile1,"g_rN%d.N2%d.S%.3f.Lx%.2f.Clone%d.Soft%d.ktracer%.2f.E10.XYZ",N_max,Ntype[0],S,Lx,N_snapshots,soft,ksoft);
     ofstream fileoutg;
     fileoutg.open(outputfile1);
     double xdis,ydis,r2;
@@ -177,7 +177,7 @@ int main( int argc,char *argv[]){
     //Compute averages over the cloned lattices.
     double avgy=0; //Average value of dU12/dt will be stored in avgy.
     char outputfile[100];
-    sprintf(outputfile,"ystatsNmax%d.N2%d.S%.3f.Lx%.2f.Clone%d.Soft%d.ktracer%.2f.XYZ",N_max,Ntype[0],S,Lx,N_snapshots,soft,ksoft);
+    sprintf(outputfile,"ystatsNmax%d.N2%d.S%.3f.Lx%.2f.Clone%d.Soft%d.E10.ktracer%.2f.XYZ",N_max,Ntype[0],S,Lx,N_snapshots,soft,ksoft);
     ofstream fileoutystats;
     fileoutystats.open(outputfile);
     fileoutystats<<"CGF\t"<<log(growthcgf)/t_analysis<<"\n";
@@ -189,7 +189,7 @@ int main( int argc,char *argv[]){
         avgy+=tempy;
     }
 	cout<<"avgenergy:"<<avgy*pow(N_snapshots,-1.0)<<"\n";
-    sprintf(outputfile,"SnapshotsN%d.N2%d.S%.3f.Lx%.2f.Clone%d.Soft%d.ktracer%.2f.XYZ",N_max,Ntype[0],S,Lx,N_snapshots,soft,ksoft);
+    sprintf(outputfile,"SnapshotsN%d.N2%d.S%.3f.Lx%.2f.Clone%d.Soft%d.E10.ktracer%.2f.XYZ",N_max,Ntype[0],S,Lx,N_snapshots,soft,ksoft);
     ofstream fileout;
     fileout.open(outputfile);
     for (int loopi=0;loopi<N_snapshots;loopi++){

@@ -240,9 +240,9 @@ void Langevin_dynamics::compute_forces(){
                             y12=y12+Ly;
                         r12=pow(x12*x12+y12*y12,0.5);
 			if (loopi!=loopj)
-				typebin=k12;
+				typebin=k12*10;
 			else 
-				typebin=1.0;
+				typebin=10.0;
             f12x=4*(12*pow(r12,-14)-6*pow(r12,-8))*x12*typebin;
             f12y=4*(12*pow(r12,-14)-6*pow(r12,-8))*y12*typebin;
             f122x=-4*(12*pow(r12,-13)-6*pow(r12,-7))*pow(r12,-1.0)+4*(168*pow(r12,-16)-48*pow(r12,-10.0))*(x12)*x12;
