@@ -28,7 +28,7 @@ void Langevin_dynamics::initialize(int N_max1,int N_max2,long int randomseed1,do
     ksoft=1.0;
     k12=ksolute_solvent;
     soft=inputsoft;
-    asoft=2.0;
+    asoft=1.0;
     Lx=12.0; //size of box
     Ly=12.0; //size of box
     N_type=2;// number of particle types
