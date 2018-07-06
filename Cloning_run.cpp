@@ -43,8 +43,8 @@ int main( int argc,char *argv[]){
 	int soft=atoi(argv[8]);
 	double ksoft=atof(argv[9]);
 	int N_snapshots=atoi(argv[10]);//number of clones
-        double Lx=7.0;
-        double Ly=7.0;
+        double Lx=12.0;
+        double Ly=12.0;
     //Initiating gsl
     gsl_rng *r=gsl_rng_alloc(gsl_rng_taus2);
     gsl_rng_set(r,randomseed);
